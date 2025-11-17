@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
+
+<BorderPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" 
+            fx:controller="ro.facultate.sd.p2p.ui.MainController" styleClass="root">
+    
+    <!-- Top Bar -->
+    <top>
+        <VBox styleClass="header-section">
+            <HBox alignment="CENTER_LEFT" spacing="15" styleClass="header">
+                <padding>
+                    <Insets top="15" right="20" bottom="15" left="20"/>
+                </padding>
+                <Label text="🌐 P2P File Sharing" styleClass="app-title">
+                    <font>
+                        <Font name="System Bold" size="24"/>
+                    </font>
+                </Label>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Label fx:id="statusLabel" text="●  Oprit" styleClass="status-label">
+                    <font>
+                        <Font size="14"/>
+                    </font>
+                </Label>
+            </HBox>
+            
+            <!-- Configuration Panel -->
+            <HBox alignment="CENTER_LEFT" spacing="20" styleClass="config-bar">
+                <padding>
+                    <Insets top="10" right="20" bottom="10" left="20"/>
+                </padding>
+                <Label text="Port:" styleClass="config-label"/>
+                <TextField fx:id="portField" prefWidth="80" styleClass="config-field"/>
+                
+                <Label text="Username:" styleClass="config-label"/>
+                <TextField fx:id="usernameField" prefWidth="150" styleClass="config-field"/>
+                
+                <Button fx:id="startButton" text="▶ Start" onAction="#handleStart" styleClass="btn-start"/>
+                <Button fx:id="stopButton" text="⏹ Stop" onAction="#handleStop" styleClass="btn-stop"/>
+                
+                <Region HBox.hgrow="ALWAYS"/>
+                <Label fx:id="peersCountLabel" text="0 peers conectați" styleClass="peers-count">
+                    <font>
+                        <Font size="12"/>
+                    </font>
+                </Label>
+            </HBox>
+        </VBox>
+    </top>
+    
+    <!-- Main Content -->
+    <center>
+        <SplitPane dividerPositions="0.35, 0.70" styleClass="main-split">
+            
+            <!-- Left Panel - Shared Files -->
+            <VBox spacing="5" styleClass="panel">
+                <padding>
+                    <Insets top="10" right="10" bottom="10" left="10"/>
+                </padding>
+                <Label text="📁 Fișierele Mele Partajate" styleClass="section-title">
+                    <font>
+                        <Font name="System Bold" size="14"/>
+                    </font>
+                </Label>
+                <TableView fx:id="sharedFilesTable" VBox.vgrow="ALWAYS" styleClass="data-table">
+                    <columns>
+                        <TableColumn fx:id="sharedFileNameColumn" text="Nume Fișier" prefWidth="180"/>
+                        <TableColumn fx:id="sharedFileSizeColumn" text="Dimensiune" prefWidth="80"/>
+                        <TableColumn fx:id="sharedFileTypeColumn" text="Tip" prefWidth="60"/>
+                    </columns>
+                </TableView>
+                <HBox spacing="10" alignment="CENTER">
+                    <padding>
+                        <Insets top="5"/>
+                    </padding>
+                    <Button fx:id="addFileButton" text="➕ Adaugă Fișier" onAction="#handleAddFile" 
+                            styleClass="btn-primary" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                    <Button fx:id="removeFileButton" text="➖ Șterge" onAction="#handleRemoveFile" 
+                            styleClass="btn-secondary" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                </HBox>
+            </VBox>
+            
+            <!-- Middle Panel - Available Files & Peers -->
+            <VBox spacing="10" styleClass="panel">
+                <padding>
+                    <Insets top="10" right="10" bottom="10" left="10"/>
+                </padding>
+                
+                <!-- Available Files -->
+                <VBox spacing="5" VBox.vgrow="ALWAYS">
+                    <Label text="🌍 Fișiere Disponibile în Rețea" styleClass="section-title">
+                        <font>
+                            <Font name="System Bold" size="14"/>
+                        </font>
+                    </Label>
+                    <TableView fx:id="availableFilesTable" VBox.vgrow="ALWAYS" styleClass="data-table">
+                        <columns>
+                            <TableColumn fx:id="availableFileNameColumn" text="Nume Fișier" prefWidth="200"/>
+                            <TableColumn fx:id="availableFileSizeColumn" text="Dimensiune" prefWidth="80"/>
+                            <TableColumn fx:id="availableFilePeerColumn" text="De la Peer" prefWidth="100"/>
+                        </columns>
+                    </TableView>
+                    <HBox spacing="10" alignment="CENTER">
+                        <padding>
+                            <Insets top="5"/>
+                        </padding>
+                        <Button fx:id="downloadButton" text="⬇ Descarcă" onAction="#handleDownload" 
+                                styleClass="btn-download" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                        <Button text="🔄 Actualizează" onAction="#handleRefresh" 
+                                styleClass="btn-primary" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+                    </HBox>
+                </VBox>
+                
+                <!-- Peers List -->
+                <VBox spacing="5" prefHeight="200">
+                    <Label text="👥 Peers Conectați" styleClass="section-title">
+                        <font>
+                            <Font name="System Bold" size="14"/>
+                        </font>
+                    </Label>
+                    <TableView fx:id="peersTable" VBox.vgrow="ALWAYS" styleClass="data-table">
+                        <columns>
+                            <TableColumn fx:id="peerNameColumn" text="Username" prefWidth="120"/>
+                            <TableColumn fx:id="peerIpColumn" text="IP:Port" prefWidth="150"/>
+                            <TableColumn fx:id="peerStatusColumn" text="Status" prefWidth="100"/>
+                        </columns>
+                    </TableView>
+                </VBox>
+            </VBox>
+            
+            <!-- Right Panel - Logs -->
+            <VBox spacing="5" styleClass="panel">
+                <padding>
+                    <Insets top="10" right="10" bottom="10" left="10"/>
+                </padding>
+                <Label text="📋 Jurnal Activitate" styleClass="section-title">
+                    <font>
+                        <Font name="System Bold" size="14"/>
+                    </font>
+                </Label>
+                <TextArea fx:id="logArea" editable="false" wrapText="true" VBox.vgrow="ALWAYS" 
+                          styleClass="log-area">
+                    <font>
+                        <Font name="Consolas" size="11"/>
+                    </font>
+                </TextArea>
+            </VBox>
+            
+        </SplitPane>
+    </center>
+    
+</BorderPane>
