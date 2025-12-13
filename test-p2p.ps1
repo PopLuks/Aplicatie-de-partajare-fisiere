@@ -8,6 +8,13 @@ Write-Host "Acest script va porni 2 instanțe ale aplicației." -ForegroundColor
 Write-Host "Cele 2 noduri se vor descoperi automat." -ForegroundColor Yellow
 Write-Host ""
 
+$localMaven = Join-Path $PSScriptRoot "maven\bin\mvn.cmd"
+if (Test-Path $localMaven) {
+    $mvnCmd = $localMaven
+} else {
+    $mvnCmd = "mvn"
+}
+
 $continue = Read-Host "Continui? (Da/Nu)"
 if ($continue -notmatch "^[DdYy]") {
     Write-Host "Anulat." -ForegroundColor Red
@@ -16,7 +23,7 @@ if ($continue -notmatch "^[DdYy]") {
 
 Write-Host ""
 Write-Host "Compilare proiect..." -ForegroundColor Yellow
-mvn clean compile -q
+& $mvnCmd clean compile -q
 if ($LASTEXITCODE -ne 0) {
     Write-Host "[EROARE] Compilarea a eșuat!" -ForegroundColor Red
     exit 1
@@ -26,7 +33,7 @@ Write-Host ""
 
 # Pornește prima instanță
 Write-Host "Pornesc prima instanță (Nod 1)..." -ForegroundColor Cyan
-Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd '$PWD'; Write-Host 'NOD 1 - P2P File Sharing' -ForegroundColor Green; mvn javafx:run"
+Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd '$PWD'; Write-Host 'NOD 1 - P2P File Sharing' -ForegroundColor Green; & '$mvnCmd' javafx:run"
 
 # Așteaptă 5 secunde
 Write-Host "Aștept 5 secunde..." -ForegroundColor Yellow
@@ -34,7 +41,7 @@ Start-Sleep -Seconds 5
 
 # Pornește a doua instanță
 Write-Host "Pornesc a doua instanță (Nod 2)..." -ForegroundColor Cyan
-Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd '$PWD'; Write-Host 'NOD 2 - P2P File Sharing' -ForegroundColor Blue; mvn javafx:run"
+Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd '$PWD'; Write-Host 'NOD 2 - P2P File Sharing' -ForegroundColor Blue; & '$mvnCmd' javafx:run"
 
 Write-Host ""
 Write-Host "========================================" -ForegroundColor Green

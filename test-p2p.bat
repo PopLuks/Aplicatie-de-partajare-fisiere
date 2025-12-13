@@ -6,6 +6,11 @@ echo.
 
 cd /d "%~dp0"
 
+set "MAVEN_CMD=mvn"
+if exist "%~dp0maven\bin\mvn.cmd" (
+    set "MAVEN_CMD=%~dp0maven\bin\mvn.cmd"
+)
+
 echo Aceasta va porni 2 instante ale aplicatiei.
 echo Vei vedea 2 ferestre separate care vor comunica intre ele.
 echo.
@@ -14,12 +19,12 @@ pause >nul
 
 echo.
 echo Pornesc prima instanta...
-start "P2P Instance 1" cmd /c "mvn javafx:run"
+start "P2P Instance 1" cmd /c "%MAVEN_CMD% javafx:run"
 
 timeout /t 5 /nobreak >nul
 
 echo Pornesc a doua instanta...
-start "P2P Instance 2" cmd /c "mvn javafx:run"
+start "P2P Instance 2" cmd /c "%MAVEN_CMD% javafx:run"
 
 echo.
 echo Ambele instante au fost pornite!

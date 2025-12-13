@@ -7,15 +7,20 @@ echo.
 cd /d "%~dp0"
 
 echo Verificare Maven...
-where mvn >nul 2>nul
-if %ERRORLEVEL% NEQ 0 (
-    echo [EROARE] Maven nu este instalat sau nu este in PATH!
-    echo Instalare: https://maven.apache.org/download.cgi
-    pause
-    exit /b 1
+set "MAVEN_CMD=mvn"
+if exist "%~dp0maven\bin\mvn.cmd" (
+    set "MAVEN_CMD=%~dp0maven\bin\mvn.cmd"
+    echo Maven local gasit!
+) else (
+    where mvn >nul 2>nul
+    if %ERRORLEVEL% NEQ 0 (
+        echo [EROARE] Maven nu este instalat sau nu este in PATH!
+        echo Instalare: https://maven.apache.org/download.cgi
+        pause
+        exit /b 1
+    )
+    echo Maven global gasit!
 )
-
-echo Maven gasit!
 echo.
 
 echo Verificare Java...
@@ -32,7 +37,7 @@ echo.
 
 echo Compilare si pornire aplicatie...
 echo.
-mvn javafx:run
+call "%MAVEN_CMD%" javafx:run
 
 if %ERRORLEVEL% NEQ 0 (
     echo.

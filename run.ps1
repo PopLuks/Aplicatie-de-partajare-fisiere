@@ -6,12 +6,19 @@ Write-Host ""
 
 # Verifică Maven
 Write-Host "Verificare Maven..." -ForegroundColor Yellow
-$mvnPath = Get-Command mvn -ErrorAction SilentlyContinue
-if (-not $mvnPath) {
-    Write-Host "[EROARE] Maven nu este instalat!" -ForegroundColor Red
-    exit 1
+$localMaven = Join-Path $PSScriptRoot "maven\bin\mvn.cmd"
+if (Test-Path $localMaven) {
+    $mvnCmd = $localMaven
+    Write-Host "✓ Maven local găsit" -ForegroundColor Green
+} else {
+    $mvnPath = Get-Command mvn -ErrorAction SilentlyContinue
+    if (-not $mvnPath) {
+        Write-Host "[EROARE] Maven nu este instalat!" -ForegroundColor Red
+        exit 1
+    }
+    $mvnCmd = "mvn"
+    Write-Host "✓ Maven global găsit" -ForegroundColor Green
 }
-Write-Host "✓ Maven găsit" -ForegroundColor Green
 
 # Verifică Java
 Write-Host "Verificare Java..." -ForegroundColor Yellow
@@ -25,7 +32,7 @@ Write-Host ""
 
 # Compilează
 Write-Host "Compilare proiect..." -ForegroundColor Yellow
-mvn clean compile -q
+& $mvnCmd clean compile -q
 if ($LASTEXITCODE -ne 0) {
     Write-Host "[EROARE] Compilarea a eșuat!" -ForegroundColor Red
     exit 1
@@ -42,4 +49,4 @@ Write-Host "Aplicația va porni într-o fereastră nouă." -ForegroundColor Yell
 Write-Host "Așteaptă ~10 secunde pentru a vedea interfața." -ForegroundColor Yellow
 Write-Host ""
 
-mvn javafx:run
+& $mvnCmd javafx:run
