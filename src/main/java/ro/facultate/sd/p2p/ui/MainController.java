@@ -156,12 +156,29 @@ public class MainController {
             fileTransferPort = findAvailablePort(8888, 8900);
             log("🔌 Port transfer găsit: " + fileTransferPort);
             
-            // Pornește serverul de fișiere
+            // Pornește serviciul de descoperire MAI ÎNTÂI
+            discoveryService = new NodeDiscoveryService(fileTransferPort);
+            discoveryService.setOnPeerDiscovered(this::onPeerDiscovered);
+            discoveryService.setOnPeerLost(this::onPeerLost);
+            discoveryService.setOnFileAdded(this::onFileAddedByPeer);
+            discoveryService.start();
+            
+            // Pornește serverul de fișiere ȘI setează callback-urile ÎNAINTE de start
             fileServer = new FileServer(fileTransferPort, sharedFolder);
             fileServer.setOnFileRequested(fileName -> 
                 log("📤 Cerere primită pentru: " + fileName));
             fileServer.setOnTransferComplete(fileName -> 
                 log("✅ Transfer completat: " + fileName));
+            
+            // IMPORTANT: Setează callback FILE_ADDED ÎNAINTE de start
+            fileServer.setOnFileAdded(fileInfo -> {
+                // Setează owner peer ID
+                fileInfo.setOwnerPeerId(discoveryService.getPeerId());
+                // Trimite notificare în rețea
+                discoveryService.broadcastFileAdded(fileInfo);
+                log("📢 Broadcasting FILE_ADDED pentru: " + fileInfo.getFileName());
+            });
+            
             fileServer.start();
             
             // Pornește clientul
@@ -178,12 +195,6 @@ public class MainController {
             fileClient.setOnDownloadError((fileName, error) -> 
                 Platform.runLater(() -> showAlert("Eroare Descărcare", 
                     "Nu s-a putut descărca " + fileName + ":\n" + error, Alert.AlertType.ERROR)));
-            
-            // Pornește serviciul de descoperire
-            discoveryService = new NodeDiscoveryService(fileTransferPort);
-            discoveryService.setOnPeerDiscovered(this::onPeerDiscovered);
-            discoveryService.setOnPeerLost(this::onPeerLost);
-            discoveryService.start();
             
             // Actualizează UI
             Platform.runLater(() -> {
@@ -254,6 +265,33 @@ public class MainController {
     }
     
     /**
+     * Callback când un peer adaugă un fișier nou (inclusiv propriile fișiere)
+     */
+    private void onFileAddedByPeer(FileInfo fileInfo) {
+        Platform.runLater(() -> {
+            // Verifică dacă fișierul nu există deja în networkFiles
+            boolean exists = networkFiles.stream()
+                .anyMatch(f -> f.getFileHash().equals(fileInfo.getFileHash()));
+            
+            if (!exists) {
+                networkFiles.add(fileInfo);
+                updateStatistics();
+                
+                // Determină dacă e fișierul propriu sau de la alt peer
+                String ownerId = fileInfo.getOwnerPeerId();
+                boolean isOwnFile = (ownerId != null && ownerId.equals(discoveryService.getPeerId()));
+                
+                if (isOwnFile) {
+                    log("📋 Fișierul tău apare în Available Files: " + fileInfo.getFileName());
+                } else {
+                    log("✨ Fișier nou disponibil: " + fileInfo.getFileName() + 
+                        " de la peer " + ownerId.substring(0, 8) + "...");
+                }
+            }
+        });
+    }
+    
+    /**
      * Adaugă un fișier la partajare
      */
     @FXML
@@ -267,22 +305,10 @@ public class MainController {
             
             if (success) {
                 updateSharedFilesList();
-                
-                // Adaugă fișierul și în lista de fișiere disponibile în rețea
-                List<FileInfo> myFiles = fileServer.getSharedFiles();
-                FileInfo addedFile = myFiles.stream()
-                    .filter(f -> f.getFileName().equals(selectedFile.getName()))
-                    .findFirst()
-                    .orElse(null);
-                
-                if (addedFile != null && !networkFiles.contains(addedFile)) {
-                    networkFiles.add(addedFile);
-                    updateStatistics();
-                }
-                
                 log("➕ Fișier adăugat: " + selectedFile.getName());
                 showAlert("Succes", "Fișierul a fost adăugat la partajare!", 
                          Alert.AlertType.INFORMATION);
+                // Fișierul va apărea automat în networkFiles prin callback-ul onFileAdded
             } else {
                 showAlert("Eroare", "Nu s-a putut adăuga fișierul!", 
                          Alert.AlertType.ERROR);
@@ -359,10 +385,13 @@ public class MainController {
         sharedFiles.clear();
         sharedFiles.addAll(fileServer.getSharedFiles());
         
-        // Adaugă fișierele partajate și în lista de fișiere disponibile
-        for (FileInfo file : sharedFiles) {
-            if (!networkFiles.contains(file)) {
-                networkFiles.add(file);
+        // Setează owner peer ID pentru fișierele proprii și adaugă în lista de fișiere disponibile
+        if (discoveryService != null) {
+            for (FileInfo file : sharedFiles) {
+                file.setOwnerPeerId(discoveryService.getPeerId());
+                if (!networkFiles.contains(file)) {
+                    networkFiles.add(file);
+                }
             }
         }
         

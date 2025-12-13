@@ -47,6 +47,7 @@ public class NodeDiscoveryService {
     
     private Consumer<PeerInfo> onPeerDiscovered;
     private Consumer<String> onPeerLost;
+    private Consumer<ro.facultate.sd.p2p.model.FileInfo> onFileAdded;
     
     public NodeDiscoveryService(int fileTransferPort) {
         this.peerId = UUID.randomUUID().toString();
@@ -142,7 +143,7 @@ public class NodeDiscoveryService {
      * Ascultă mesaje de descoperire de la alte noduri
      */
     private void listenForPeers() {
-        byte[] buffer = new byte[1024];
+        byte[] buffer = new byte[8192];  // Mărit buffer pentru FILE_ADDED
         
         while (running) {
             try {
@@ -154,6 +155,8 @@ public class NodeDiscoveryService {
                 
                 if (message.getType() == P2PMessage.MessageType.PEER_ANNOUNCE) {
                     handlePeerAnnounce(message, packet.getAddress());
+                } else if (message.getType() == P2PMessage.MessageType.FILE_ADDED) {
+                    handleFileAdded(message, packet.getAddress());
                 }
                 
             } catch (SocketException e) {
@@ -219,6 +222,46 @@ public class NodeDiscoveryService {
             
         } catch (IOException e) {
             logger.error("Eroare la trimiterea răspunsului direct", e);
+        }
+    }
+    
+    /**
+     * Procesează notificare că un peer a adăugat un fișier nou (inclusiv propriile fișiere)
+     */
+    private void handleFileAdded(P2PMessage message, InetAddress senderAddress) {
+        PeerInfo peerInfo = message.getSenderInfo();
+        ro.facultate.sd.p2p.model.FileInfo fileInfo = message.getFileInfo();
+        
+        if (fileInfo != null && onFileAdded != null) {
+            // Procesează toate mesajele FILE_ADDED, inclusiv propriile (pentru UI consistent)
+            logger.info("Fișier nou anunțat de peer {}: {}", 
+                       peerInfo != null ? peerInfo.getPeerId().substring(0, 8) : "?",
+                       fileInfo.getFileName());
+            onFileAdded.accept(fileInfo);
+        }
+    }
+    
+    /**
+     * Trimite notificare când se adaugă un fișier nou (broadcast multicast)
+     */
+    public void broadcastFileAdded(ro.facultate.sd.p2p.model.FileInfo fileInfo) {
+        try {
+            PeerInfo myInfo = new PeerInfo(peerId, getLocalAddress(), DISCOVERY_PORT, fileTransferPort);
+            P2PMessage message = new P2PMessage(P2PMessage.MessageType.FILE_ADDED, myInfo);
+            message.setFileInfo(fileInfo);
+            
+            byte[] data = gson.toJson(message).getBytes();
+            DatagramPacket packet = new DatagramPacket(
+                data, data.length, 
+                group, 
+                DISCOVERY_PORT
+            );
+            
+            socket.send(packet);
+            logger.info("Notificare FILE_ADDED trimisă pentru: {}", fileInfo.getFileName());
+            
+        } catch (IOException e) {
+            logger.error("Eroare la trimiterea notificării FILE_ADDED", e);
         }
     }
     
@@ -291,5 +334,9 @@ public class NodeDiscoveryService {
     
     public void setOnPeerLost(Consumer<String> callback) {
         this.onPeerLost = callback;
+    }
+    
+    public void setOnFileAdded(Consumer<ro.facultate.sd.p2p.model.FileInfo> callback) {
+        this.onFileAdded = callback;
     }
 }

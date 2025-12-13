@@ -41,6 +41,7 @@ public class FileServer {
     
     private Consumer<String> onFileRequested;
     private Consumer<String> onTransferComplete;
+    private Consumer<FileInfo> onFileAdded;
     
     public FileServer(int port, Path sharedFolder) {
         this.port = port;
@@ -279,7 +280,7 @@ public class FileServer {
     /**
      * Adaugă un fișier la lista de fișiere partajate
      */
-    private void addFileToSharedList(Path filePath) {
+    private FileInfo addFileToSharedList(Path filePath) {
         try {
             String fileName = filePath.getFileName().toString();
             long fileSize = Files.size(filePath);
@@ -289,9 +290,11 @@ public class FileServer {
             sharedFiles.add(fileInfo);
             
             logger.debug("Fișier adăugat: {}", fileName);
+            return fileInfo;
             
         } catch (IOException e) {
             logger.error("Eroare la adăugarea fișierului: " + filePath, e);
+            return null;
         }
     }
     
@@ -336,7 +339,13 @@ public class FileServer {
                 Files.copy(sourceFile, targetPath);
             }
             
-            addFileToSharedList(targetPath);
+            FileInfo fileInfo = addFileToSharedList(targetPath);
+            
+            // Notifică callback-ul cu fișierul adăugat
+            if (fileInfo != null && onFileAdded != null) {
+                onFileAdded.accept(fileInfo);
+            }
+            
             logger.info("Fișier adăugat la partajare: {}", sourceFile.getFileName());
             return true;
             
@@ -366,5 +375,9 @@ public class FileServer {
     
     public void setOnTransferComplete(Consumer<String> callback) {
         this.onTransferComplete = callback;
+    }
+    
+    public void setOnFileAdded(Consumer<FileInfo> callback) {
+        this.onFileAdded = callback;
     }
 }

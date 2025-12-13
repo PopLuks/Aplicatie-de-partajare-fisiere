@@ -15,6 +15,7 @@ public class P2PMessage implements Serializable {
         PEER_RESPONSE,      // "Salut înapoi, iată-mă"
         REQUEST_FILE_LIST,  // "Ce fișiere ai?"
         FILE_LIST_RESPONSE, // "Iată lista mea de fișiere"
+        FILE_ADDED,         // "Am adăugat un fișier nou!" (UDP broadcast)
         
         // Mesaje de transfer (TCP)
         FILE_REQUEST,       // "Vreau să descarc fișierul X"
@@ -31,6 +32,7 @@ public class P2PMessage implements Serializable {
     private MessageType type;
     private PeerInfo senderInfo;
     private List<FileInfo> fileList;
+    private FileInfo fileInfo;  // Pentru FILE_ADDED
     private String requestedFileName;
     private byte[] fileData;
     private String errorMessage;
@@ -94,6 +96,14 @@ public class P2PMessage implements Serializable {
     
     public void setErrorMessage(String errorMessage) {
         this.errorMessage = errorMessage;
+    }
+    
+    public FileInfo getFileInfo() {
+        return fileInfo;
+    }
+    
+    public void setFileInfo(FileInfo fileInfo) {
+        this.fileInfo = fileInfo;
     }
     
     @Override
