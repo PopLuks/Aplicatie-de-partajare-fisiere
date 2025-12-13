@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21" 
+            xmlns:fx="http://javafx.com/fxml/1" 
+            fx:controller="ro.facultate.sd.p2p.ui.MainController"
+            prefHeight="700.0" prefWidth="1000.0"
+            stylesheets="@styles.css">
+    
+    <!-- Header -->
+    <top>
+        <VBox styleClass="header">
+            <padding>
+                <Insets top="15" right="20" bottom="15" left="20"/>
+            </padding>
+            
+            <HBox alignment="CENTER_LEFT" spacing="15">
+                <Label text="🌐 P2P File Sharing" styleClass="app-title">
+                    <font>
+                        <Font name="System Bold" size="24"/>
+                    </font>
+                </Label>
+                
+                <Region HBox.hgrow="ALWAYS"/>
+                
+                <Label fx:id="peerIdLabel" text="Peer ID: ..." styleClass="peer-info"/>
+                <Separator orientation="VERTICAL"/>
+                <Label fx:id="statusLabel" text="● Offline" styleClass="status-offline"/>
+            </HBox>
+            
+            <HBox alignment="CENTER_LEFT" spacing="10" styleClass="info-bar">
+                <padding>
+                    <Insets top="10"/>
+                </padding>
+                <Label fx:id="connectedPeersLabel" text="Peers conectați: 0"/>
+                <Separator orientation="VERTICAL"/>
+                <Label fx:id="sharedFilesLabel" text="Fișiere partajate: 0"/>
+                <Separator orientation="VERTICAL"/>
+                <Label fx:id="availableFilesLabel" text="Fișiere disponibile: 0"/>
+            </HBox>
+        </VBox>
+    </top>
+    
+    <!-- Main Content -->
+    <center>
+        <SplitPane dividerPositions="0.5" VBox.vgrow="ALWAYS">
+            
+            <!-- Fișierele Mele Partajate -->
+            <VBox spacing="10" styleClass="panel">
+                <padding>
+                    <Insets top="15" right="15" bottom="15" left="15"/>
+                </padding>
+                
+                <HBox alignment="CENTER_LEFT" spacing="10">
+                    <Label text="📁 Fișierele Mele Partajate" styleClass="section-title">
+                        <font>
+                            <Font name="System Bold" size="16"/>
+                        </font>
+                    </Label>
+                    
+                    <Region HBox.hgrow="ALWAYS"/>
+                    
+                    <Button fx:id="addFileButton" text="➕ Adaugă Fișier" 
+                            onAction="#handleAddFile" styleClass="primary-button"/>
+                    <Button fx:id="refreshSharedButton" text="🔄" 
+                            onAction="#handleRefreshShared" styleClass="icon-button">
+                        <tooltip>
+                            <Tooltip text="Rescanează folderul"/>
+                        </tooltip>
+                    </Button>
+                </HBox>
+                
+                <TableView fx:id="sharedFilesTable" VBox.vgrow="ALWAYS">
+                    <columns>
+                        <TableColumn fx:id="sharedNameColumn" text="Nume Fișier" 
+                                   prefWidth="250" minWidth="150"/>
+                        <TableColumn fx:id="sharedSizeColumn" text="Dimensiune" 
+                                   prefWidth="100" minWidth="80"/>
+                        <TableColumn fx:id="sharedHashColumn" text="Hash MD5" 
+                                   prefWidth="120" minWidth="100"/>
+                    </columns>
+                    <columnResizePolicy>
+                        <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>
+                    </columnResizePolicy>
+                </TableView>
+                
+                <Label fx:id="sharedFolderLabel" text="Folder: ..." 
+                       styleClass="folder-path" wrapText="true"/>
+            </VBox>
+            
+            <!-- Fișiere Disponibile în Rețea -->
+            <VBox spacing="10" styleClass="panel">
+                <padding>
+                    <Insets top="15" right="15" bottom="15" left="15"/>
+                </padding>
+                
+                <HBox alignment="CENTER_LEFT" spacing="10">
+                    <Label text="🌍 Fișiere Disponibile în Rețea" styleClass="section-title">
+                        <font>
+                            <Font name="System Bold" size="16"/>
+                        </font>
+                    </Label>
+                    
+                    <Region HBox.hgrow="ALWAYS"/>
+                    
+                    <Button fx:id="refreshNetworkButton" text="🔄 Actualizează" 
+                            onAction="#handleRefreshNetwork" styleClass="secondary-button"/>
+                    <Button fx:id="downloadButton" text="⬇ Descarcă" 
+                            onAction="#handleDownloadFile" styleClass="primary-button"
+                            disable="true"/>
+                </HBox>
+                
+                <TableView fx:id="networkFilesTable" VBox.vgrow="ALWAYS">
+                    <columns>
+                        <TableColumn fx:id="networkNameColumn" text="Nume Fișier" 
+                                   prefWidth="200" minWidth="150"/>
+                        <TableColumn fx:id="networkSizeColumn" text="Dimensiune" 
+                                   prefWidth="90" minWidth="80"/>
+                        <TableColumn fx:id="networkOwnerColumn" text="De la Peer" 
+                                   prefWidth="150" minWidth="120"/>
+                        <TableColumn fx:id="networkHashColumn" text="Hash MD5" 
+                                   prefWidth="120" minWidth="100"/>
+                    </columns>
+                    <columnResizePolicy>
+                        <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>
+                    </columnResizePolicy>
+                </TableView>
+                
+                <Label fx:id="downloadFolderLabel" text="Descărcări în: ..." 
+                       styleClass="folder-path" wrapText="true"/>
+            </VBox>
+            
+        </SplitPane>
+    </center>
+    
+    <!-- Footer - Activity Log -->
+    <bottom>
+        <VBox spacing="5" styleClass="footer">
+            <padding>
+                <Insets top="10" right="15" bottom="10" left="15"/>
+            </padding>
+            
+            <HBox alignment="CENTER_LEFT" spacing="10">
+                <Label text="📝 Activitate" styleClass="section-title">
+                    <font>
+                        <Font name="System Bold" size="14"/>
+                    </font>
+                </Label>
+                
+                <Region HBox.hgrow="ALWAYS"/>
+                
+                <Button text="🗑 Curăță" onAction="#handleClearLog" 
+                        styleClass="icon-button" prefWidth="60"/>
+            </HBox>
+            
+            <TextArea fx:id="activityLog" editable="false" 
+                     wrapText="true" prefHeight="120" styleClass="log-area"/>
+        </VBox>
+    </bottom>
+    
+</BorderPane>
