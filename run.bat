@@ -37,11 +37,4 @@ echo.
 
 echo Compilare si pornire aplicatie...
 echo.
-call "%MAVEN_CMD%" javafx:run
-
-if %ERRORLEVEL% NEQ 0 (
-    echo.
-    echo [EROARE] Aplicatia nu a putut porni!
-    echo Verifica erorile de mai sus.
-    pause
-)
+%MAVEN_CMD% javafx:run

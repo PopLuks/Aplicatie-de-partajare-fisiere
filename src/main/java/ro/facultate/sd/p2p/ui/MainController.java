@@ -267,6 +267,19 @@ public class MainController {
             
             if (success) {
                 updateSharedFilesList();
+                
+                // Adaugă fișierul și în lista de fișiere disponibile în rețea
+                List<FileInfo> myFiles = fileServer.getSharedFiles();
+                FileInfo addedFile = myFiles.stream()
+                    .filter(f -> f.getFileName().equals(selectedFile.getName()))
+                    .findFirst()
+                    .orElse(null);
+                
+                if (addedFile != null && !networkFiles.contains(addedFile)) {
+                    networkFiles.add(addedFile);
+                    updateStatistics();
+                }
+                
                 log("➕ Fișier adăugat: " + selectedFile.getName());
                 showAlert("Succes", "Fișierul a fost adăugat la partajare!", 
                          Alert.AlertType.INFORMATION);
@@ -312,11 +325,18 @@ public class MainController {
         log("🔄 Actualizare fișiere din rețea...");
         networkFiles.clear();
         
+        // Adaugă mai întâi propriile fișiere
+        networkFiles.addAll(sharedFiles);
+        
         new Thread(() -> {
             for (PeerInfo peer : connectedPeers.values()) {
                 List<FileInfo> peerFiles = fileClient.requestFileList(peer);
                 Platform.runLater(() -> {
-                    networkFiles.addAll(peerFiles);
+                    for (FileInfo file : peerFiles) {
+                        if (!networkFiles.contains(file)) {
+                            networkFiles.add(file);
+                        }
+                    }
                     updateStatistics();
                 });
             }
@@ -338,6 +358,14 @@ public class MainController {
     private void updateSharedFilesList() {
         sharedFiles.clear();
         sharedFiles.addAll(fileServer.getSharedFiles());
+        
+        // Adaugă fișierele partajate și în lista de fișiere disponibile
+        for (FileInfo file : sharedFiles) {
+            if (!networkFiles.contains(file)) {
+                networkFiles.add(file);
+            }
+        }
+        
         updateStatistics();
     }
     
