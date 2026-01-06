@@ -48,7 +48,8 @@ public class NodeDiscoveryService {
     private Consumer<PeerInfo> onPeerDiscovered;
     private Consumer<String> onPeerLost;
     private Consumer<ro.facultate.sd.p2p.model.FileInfo> onFileAdded;
-    
+   
+    /* Generare Peer  */
     public NodeDiscoveryService(int fileTransferPort) {
         this.peerId = UUID.randomUUID().toString();
         this.fileTransferPort = fileTransferPort;
@@ -140,10 +141,10 @@ public class NodeDiscoveryService {
     }
     
     /**
-     * Ascultă mesaje de descoperire de la alte noduri
+     * Asculta mesaje de descoperire de la alte noduri
      */
     private void listenForPeers() {
-        byte[] buffer = new byte[8192];  // Mărit buffer pentru FILE_ADDED
+        byte[] buffer = new byte[8192];
         
         while (running) {
             try {

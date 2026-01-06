@@ -36,6 +36,7 @@ public class P2PMessage implements Serializable {
     private String requestedFileName;
     private byte[] fileData;
     private String errorMessage;
+    private long resumeOffset;  // Pentru resume download - de la ce byte să înceapă
     
     public P2PMessage() {
     }
@@ -104,6 +105,14 @@ public class P2PMessage implements Serializable {
     
     public void setFileInfo(FileInfo fileInfo) {
         this.fileInfo = fileInfo;
+    }
+    
+    public long getResumeOffset() {
+        return resumeOffset;
+    }
+    
+    public void setResumeOffset(long resumeOffset) {
+        this.resumeOffset = resumeOffset;
     }
     
     @Override

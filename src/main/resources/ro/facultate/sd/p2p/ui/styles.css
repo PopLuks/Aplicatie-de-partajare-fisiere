@@ -90,6 +90,25 @@
     -fx-background-color: #7f8c8d;
 }
 
+.danger-button {
+    -fx-background-color: #e74c3c;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+
+.danger-button:hover {
+    -fx-background-color: #c0392b;
+}
+
+.danger-button:pressed {
+    -fx-background-color: #a93226;
+}
+
+.danger-button:disabled {
+    -fx-background-color: #bdc3c7;
+    -fx-opacity: 0.6;
+}
+
 .icon-button {
     -fx-background-color: transparent;
     -fx-border-color: #bdc3c7;

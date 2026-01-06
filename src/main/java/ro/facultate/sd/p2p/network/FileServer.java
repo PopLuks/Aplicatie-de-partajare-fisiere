@@ -174,10 +174,11 @@ public class FileServer {
     }
     
     /**
-     * Trimite un fișier cerut
+     * Trimite un fișier cerut (cu suport pentru resume de la offset)
      */
     private void handleFileRequest(P2PMessage request, ObjectOutputStream out) throws IOException {
         String fileName = request.getRequestedFileName();
+        long resumeOffset = request.getResumeOffset();
         
         if (onFileRequested != null) {
             onFileRequested.accept(fileName);
@@ -216,13 +217,26 @@ public class FileServer {
         out.writeObject(acceptMessage);
         out.flush();
         
-        logger.info("Începe transferul fișierului: {}", fileName);
+        if (resumeOffset > 0) {
+            logger.info("🔄 RELUARE transfer fișier: {} de la byte {} (skip {}%)", 
+                       fileName, resumeOffset, (resumeOffset * 100.0) / requestedFile.getFileSize());
+        } else {
+            logger.info("⬆️ Începe transfer NOU: {}", fileName);
+        }
         
-        // Trimite fișierul în bucăți
+        // Trimite fișierul în bucăți (de la offset dacă e resume)
         try (FileInputStream fis = new FileInputStream(filePath.toFile())) {
+            // Skip bytes dacă reluăm transferul
+            if (resumeOffset > 0) {
+                long skipped = fis.skip(resumeOffset);
+                if (skipped != resumeOffset) {
+                    logger.warn("Nu s-au putut skip toți bytes: {} != {}", skipped, resumeOffset);
+                }
+            }
+            
             byte[] buffer = new byte[BUFFER_SIZE];
             int bytesRead;
-            long totalSent = 0;
+            long totalSent = resumeOffset; // Pornim de la offset
             
             while ((bytesRead = fis.read(buffer)) != -1) {
                 P2PMessage chunk = new P2PMessage(P2PMessage.MessageType.FILE_CHUNK);
