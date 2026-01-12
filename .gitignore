@@ -43,3 +43,6 @@ P2P-Downloads/
 *.zip
 *.tar.gz
 *.rar
+
+# Node.js
+node_modules/
